@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Викторина: Здоровая vs Вредная еда</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            font-weight: bold;
+            flex-wrap: wrap;
+        }
+
+        .score { color: #667eea; font-size: 1.2em; }
+        .errors { color: #f44336; font-size: 1.2em; }
+
+        .game-area {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .basket {
+            flex: 1;
+            min-height: 300px;
+            border: 4px dashed;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .basket.healthy {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .basket.unhealthy {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .basket h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .basket.healthy h2 { color: #2e7d32; }
+        .basket.unhealthy h2 { color: #c62828; }
+
+        .basket.drag-over {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        #healthyItems, #unhealthyItems {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-start;
+            gap: 10px;
+            padding: 10px;
+            min-height: 50px;
+        }
+
+        .products-area {
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .products-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .products-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            min-height: 150px;
+        }
+
+        .product {
+            width: 120px;
+            height: 140px;
+            cursor: grab;
+            transition: transform 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .product:active { cursor: grabbing; }
+        .product:hover { transform: translateY(-5px); }
+        .product.dragging { opacity: 0.5; }
+
+        .product img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
+
+        .product-name {
+            margin-top: 5px;
+            font-weight: bold;
+            color: #333;
+            font-size: 13px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .facts-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .facts-title {
+            color: #856404;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .fact-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            display: none;
+            transition: background-color 0.3s;
+        }
+
+        .fact-item.show {
+            display: block;
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .reset-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .correct { animation: correctPulse 0.5s; }
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .wrong { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 Сортировка продуктов 🍔</h1>
+        <p class="subtitle">Перетащите продукты в правильную корзину!</p>
+        
+        <!-- 🔧 ДОБАВЛЕН СЧЁТЧИК ОШИБОК -->
+        <div class="score-board">
+            <span>💯 Счёт: <span class="score" id="score">0</span> / 120</span>
+            <span>❌ Ошибки: <span class="errors" id="errors">0</span></span>
+        </div>
+
+        <div class="game-area">
+            <div class="basket healthy" id="healthyBasket" 
+                 ondrop="drop(event, 'healthy')" 
+                 ondragover="allowDrop(event)"
+                 ondragenter="dragEnter(event)"
+                 ondragleave="dragLeave(event)">
+                <h2>🥗 Здоровая пища</h2>
+                <p>Перетащите сюда полезные продукты</p>
+                <div id="healthyItems"></div>
+            </div>
+
+            <div class="basket unhealthy" id="unhealthyBasket" 
+                 ondrop="drop(event, 'unhealthy')" 
+                 ondragover="allowDrop(event)"
+                 ondragenter="dragEnter(event)"
+                 ondragleave="dragLeave(event)">
+                <h2>🍟 Вредная еда</h2>
+                <p>Перетащите сюда вредные продукты</p>
+                <div id="unhealthyItems"></div>
+            </div>
+        </div>
+
+        <div class="products-area">
+            <h3 class="products-title">📦 Продукты для сортировки:</h3>
+            <div class="products-container" id="productsContainer">
+                
+                <div class="product" draggable="true" id="apple" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="healthy" data-name="apple">
+                    <img src="https://avatars.mds.yandex.net/i?id=31fe0bcea7b4345ea614a696f4cdd0ae_l-2398678-images-thumbs&n=13" alt="Яблоко" draggable="false">
+                    <div class="product-name">Яблоко</div>
+                </div>
+
+                <div class="product" draggable="true" id="chips" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="unhealthy" data-name="chips">
+                    <img src="https://i.pinimg.com/736x/cb/21/0e/cb210ecf1cd1bb3ca6a18085dd8cab34.jpg" alt="Чипсы" draggable="false">
+                    <div class="product-name">Чипсы</div>
+                </div>
+
+                <div class="product" draggable="true" id="carrot" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="healthy" data-name="carrot">
+                    <img src="https://i.pinimg.com/originals/58/d2/c0/58d2c000a73ce66d34e5abded7d038b2.jpg" alt="Морковь" draggable="false">
+                    <div class="product-name">Морковь</div>
+                </div>
+
+                <div class="product" draggable="true" id="soda" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="unhealthy" data-name="soda">
+                    <img src="https://i.pinimg.com/originals/7a/18/69/7a18698d5e903fd79e52c3687bc909cc.png?nii=t" alt="Газировка" draggable="false">
+                    <div class="product-name">Газировка</div>
+                </div>
+
+                <div class="product" draggable="true" id="fish" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="healthy" data-name="fish">
+                    <img src="https://avatars.mds.yandex.net/i?id=5761ad071e90e7138c3862273a1e9afc_l-4948104-images-thumbs&n=13" alt="Рыба" draggable="false">
+                    <div class="product-name">Рыба</div>
+                </div>
+
+                <div class="product" draggable="true" id="burger" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="unhealthy" data-name="burger">
+                    <img src="https://avatars.mds.yandex.net/i?id=9aed5e2c46ce3ab3363b8ed584e2a7b2_l-4238150-images-thumbs&n=13" alt="Бургер" draggable="false">
+                    <div class="product-name">Бургер</div>
+                </div>
+
+                <div class="product" draggable="true" id="broccoli" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="healthy" data-name="broccoli">
+                    <img src="https://i.pinimg.com/736x/35/3e/28/353e281f50f2472996177f57c4b50c58.jpg" alt="Брокколи" draggable="false">
+                    <div class="product-name">Брокколи</div>
+                </div>
+
+                <div class="product" draggable="true" id="candy" ondragstart="drag(event)" ondragend="dragEnd(event)" data-type="unhealthy" data-name="candy">
+                    <img src="https://i.pinimg.com/736x/09/02/f7/0902f7abfcef1f03348f5911a73099ba.jpg" alt="Конфеты" draggable="false">
+                    <div class="product-name">Конфеты</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="facts-section">
+            <h3 class="facts-title">💡 Интересные факты о еде:</h3>
+            <div id="factsList">
+                <div class="fact-item" id="fact-apple">
+                    <strong>🍎 Яблоко:</strong> Яблоки содержат витамин C и клетчатку. Одно яблоко в день помогает снизить риск сердечных заболеваний на 20%!
+                </div>
+
+                <div class="fact-item" id="fact-chips">
+                    <strong>🥔 Чипсы:</strong> В одной пачке содержится до 10 г соли — половина суточной нормы! Также в них есть акриламид — токсичное вещество, образующееся при жарке крахмала. Он накапливается в организме, повреждает нервные клетки и повышает риск онкологии.
+                </div>
+
+                <div class="fact-item" id="fact-carrot">
+                    <strong>🥕 Морковь:</strong> Богата бета-каротином, который улучшает зрение. Во время Второй мировой войны британские лётчики ели много моркови для ночного видения!
+                </div>
+
+                <div class="fact-item" id="fact-soda">
+                    <strong>🥤 Газировка:</strong> В одной банке колы содержится около 10 чайных ложек сахара! Это превышает дневную норму для взрослого человека.
+                </div>
+
+                <div class="fact-item" id="fact-fish">
+                    <strong>🐟 Рыба:</strong> Жирная рыба богата омега-3 кислотами, полезными для мозга и сердца. Рекомендуется есть рыбу 2 раза в неделю.
+                </div>
+
+                <div class="fact-item" id="fact-burger">
+                    <strong>🍔 Бургер:</strong> Средний фастфуд-бургер содержит 500-800 ккал и много насыщенных жиров. Регулярное употребление ведёт к ожирению.
+                </div>
+
+                <div class="fact-item" id="fact-broccoli">
+                    <strong>🥦 Брокколи:</strong> Содержит больше витамина C, чем апельсины! В ней есть сульфорафан, помогающий организму бороться с раковыми клетками.
+                </div>
+
+                <div class="fact-item" id="fact-candy">
+                    <strong>🍬 Конфеты:</strong> Быстрые углеводы резко повышают глюкозу в крови, за чем следует спад энергии, усталость и раздражительность.
+                </div>
+            </div>
+        </div>
+
+        <button class="reset-btn" onclick="resetGame()">🔄 Начать заново</button>
+    </div>
+
+    <script>
+        let score = 0;
+        let errors = 0; // 🔧 СЧЁТЧИК ОШИБОК
+        let sortedItems = 0;
+        const totalItems = 8;
+        const pointsPerItem = 15;
+        let draggedElement = null;
+
+        function shuffleProducts() {
+            const container = document.getElementById('productsContainer');
+            let products = Array.from(container.querySelectorAll('.product'));
+            for (let i = products.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [products[i], products[j]] = [products[j], products[i]];
+            }
+            products.forEach(p => container.appendChild(p));
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            const basket = ev.target.closest('.basket');
+            if (basket) basket.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            const basket = ev.target.closest('.basket');
+            if (basket) basket.classList.remove('drag-over');
+        }
+
+        function drag(ev) {
+            draggedElement = ev.target.closest('.product');
+            if (draggedElement) {
+                ev.dataTransfer.setData("text", draggedElement.id);
+                ev.dataTransfer.effectAllowed = "move";
+                setTimeout(() => draggedElement.classList.add('dragging'), 0);
+            }
+        }
+
+        function dragEnd(ev) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+            }
+            document.querySelectorAll('.basket').forEach(b => b.classList.remove('drag-over'));
+        }
+
+        function drop(ev, basketType) {
+            ev.preventDefault();
+            const basket = ev.target.closest('.basket');
+            if (basket) basket.classList.remove('drag-over');
+            
+            const data = ev.dataTransfer.getData("text");
+            const element = document.getElementById(data);
+            if (!element) return;
+            
+            const itemType = element.getAttribute('data-type');
+            const itemKey = element.getAttribute('data-name');
+            
+            if (itemType === basketType) {
+                score += pointsPerItem;
+                sortedItems++;
+                updateScore();
+                showFact(itemKey);
+                
+                const basketItems = basket.querySelector('div[id$="Items"]');
+                if (basketItems) {
+                    basketItems.appendChild(element);
+                    element.setAttribute('draggable', 'false');
+                    element.style.cursor = 'default';
+                    element.classList.add('correct');
+                }
+                
+                if (sortedItems === totalItems) {
+                    setTimeout(() => alert(`🎉 Поздравляем! Счёт: ${score} | Ошибки: ${errors}`), 300);
+                }
+            } else {
+                // 🔧 УВЕЛИЧИВАЕМ СЧЁТЧИК ОШИБОК
+                errors++;
+                document.getElementById('errors').textContent = errors;
+                
+                element.classList.add('wrong');
+                setTimeout(() => element.classList.remove('wrong'), 500);
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function showFact(key) {
+            const factId = 'fact-' + key;
+            const factElement = document.getElementById(factId);
+            if (factElement && !factElement.classList.contains('show')) {
+                factElement.classList.add('show');
+                const factsList = document.getElementById('factsList');
+                factsList.appendChild(factElement);
+
+                factElement.style.backgroundColor = '#fff9db';
+                setTimeout(() => {
+                    factElement.style.backgroundColor = 'white';
+                    factElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 400);
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            errors = 0; // 🔧 СБРОС СЧЁТЧИКА ОШИБОК
+            sortedItems = 0;
+            updateScore();
+            document.getElementById('errors').textContent = 0;
+            
+            const productsContainer = document.getElementById('productsContainer');
+            document.querySelectorAll('.product').forEach(product => {
+                product.setAttribute('draggable', 'true');
+                product.style.cursor = 'grab';
+                product.classList.remove('correct', 'wrong', 'dragging');
+                productsContainer.appendChild(product);
+            });
+            
+            shuffleProducts();
+            
+            document.getElementById('healthyItems').innerHTML = '';
+            document.getElementById('unhealthyItems').innerHTML = '';
+            
+            document.querySelectorAll('.fact-item').forEach(fact => {
+                fact.classList.remove('show');
+                fact.style.backgroundColor = 'white';
+            });
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.onload = function() {
+            shuffleProducts();
+            console.log('✅ Игра готова! Счётчик ошибок добавлен.');
+        };
+    </script>
+</body>
+</html>
